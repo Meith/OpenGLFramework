@@ -14,6 +14,6 @@ uniform mat4 u_proj;
 void main()
 {
 	gl_Position = u_proj * u_view * u_model * vec4(i_position, 1.0f);
-	temp_normal = i_normal;
+	temp_normal = vec3(u_model * vec4(i_normal, 1.0f));
 	temp_texcoords = i_texcoords;
 };

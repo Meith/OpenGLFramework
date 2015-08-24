@@ -8,7 +8,7 @@ DirectionalLight *DirectionalLight_Init()
 
 	vec3 ambient= { 0.3f, 0.3f, 0.3f };
 	vec3 diffuse = { 1.0f, 1.0f, 1.0f };
-	vec3 direction = { 0.0f, -1.0f, 0.0f };
+	vec3 direction = { 1.0f, 0.0f, 0.0f };
 
 	vec3_Copy(directional_light->ambient, ambient);
 	vec3_Copy(directional_light->diffuse, diffuse);

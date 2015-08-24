@@ -8,119 +8,18 @@
 
 #include "SOIL/SOIL.h"
 
-Mesh *Mesh_Init(const char *object_file, const int obj_data[6])
+Mesh *Mesh_Init(int num_vertices, int num_indices, int num_textures)
 {
 	Mesh *mesh = (Mesh *)malloc(sizeof(Mesh));
-	assert(mesh != NULL);
+	
+	mesh->num_vertices = num_vertices;
+	mesh->vertices = (Vertex *)malloc(sizeof(Vertex) * mesh->num_vertices);
 
-	// mesh data
-	vec3 *positions = (vec3 *)malloc(obj_data[0] * sizeof(vec3));
-	vec3 *normals = (vec3 *)malloc(obj_data[1] * sizeof(vec3));
-	vec2 *uvs = (vec2 *)malloc(obj_data[2] * sizeof(vec2));
-	
-	assert(positions != NULL);
-	assert(normals != NULL);
-	assert(uvs != NULL); 
-	
-	int num_pos = 0;
-	int num_norm = 0;
-	int num_uvs = 0;
-	
-	mesh->vertices = (Vertex *)malloc(obj_data[3] * sizeof(Vertex));
-	mesh->num_vertices = 0;
-	assert(mesh->vertices != NULL);
-	
-	mesh->indices = (GLuint *)malloc(obj_data[4] * sizeof(GLuint));
-	mesh->num_indices = 0;  
-	assert(mesh->indices != NULL);
-	
-	mesh->textures = (Texture *)malloc(obj_data[5] * sizeof(Texture));
-	mesh->num_textures = 0;
-	assert(mesh->textures != NULL);
-	
-	FILE *fptr;
-	fptr = fopen(object_file, "r");
-	assert(fptr != NULL);
-	
-	char buffer[101];
-	
-	int ctr = 0;
-	
-	while(fgets(buffer,sizeof(buffer),fptr)!= NULL)
-	{			
-		// check type of line
-		if(buffer[0] == 'v' && buffer[1] == 't')
-		{
-			vec2 uv;
-			ctr = sscanf(buffer, "vt %f %f", &uv[0], &uv[1]);
-			assert(ctr == 2);
-			memcpy(uvs[num_uvs], uv, sizeof(uv));
-			++num_uvs;
-		}
-		
-		else if(buffer[0] == 'v' && buffer[1] == 'n')
-		{
-			vec3 norm;
-			ctr = sscanf(buffer, "vn %f %f %f", &norm[0], &norm[1], &norm[2]);
-			assert(ctr == 3);
-			memcpy(normals[num_norm], norm, sizeof(norm));
-			++num_norm;
-		}
-		
-		else if(buffer[0] == 'v')
-		{
-			vec3 pos;
-			ctr = sscanf(buffer, "v %f %f %f", &pos[0], &pos[1], &pos[2]);
-			assert(ctr == 3);
-			memcpy(positions[num_pos], pos, sizeof(pos));
-			++num_pos;	
-		}
-	
-		else if(buffer[0] == 'f')
-		{
-			GLuint ind[9];
-			ctr = sscanf(buffer, "f %d/%d/%d %d/%d/%d %d/%d/%d", &ind[0], &ind[1], &ind[2], &ind[3], &ind[4], &ind[5], &ind[6], &ind[7], &ind[8]);
-			assert(ctr == 9);
-			
-			// Create vertices by looking up corresponding data from vectors
-			// OBJ file indices are 1-based, sp they need to be adjusted
-			Vertex v1;
-			memcpy(&v1.v_position, positions[ind[0] - 1], sizeof(v1.v_position));
-			memcpy(&v1.v_texcoords, uvs[ind[1] - 1], sizeof(v1.v_texcoords));
-			memcpy(&v1.v_normal, normals[ind[2] - 1], sizeof(v1.v_normal)); 
-			
-			Vertex v2;
-			memcpy(&v2.v_position, positions[ind[3] - 1], sizeof(v2.v_position));
-			memcpy(&v2.v_texcoords, uvs[ind[4] - 1], sizeof(v2.v_texcoords));
-			memcpy(&v2.v_normal, normals[ind[5] - 1], sizeof(v2.v_normal)); 
-			
-			Vertex v3;
-			memcpy(&v3.v_position, positions[ind[6] - 1], sizeof(v3.v_position));
-			memcpy(&v3.v_texcoords, uvs[ind[7] - 1], sizeof(v3.v_texcoords));
-			memcpy(&v3.v_normal, normals[ind[8] - 1], sizeof(v3.v_normal));
-			
-			// Add the vertices to current mesh->vertices
-			mesh->vertices[mesh->num_vertices++] = v1;
-			mesh->vertices[mesh->num_vertices++] = v2;
-			mesh->vertices[mesh->num_vertices++] = v3;
-			
-			// Add indices to current mesh->indices
-			// Indices are just 0, 1, 2...num_indices :|
-			int i = 0;
-			for(i = 0; i < 3; ++i, ++mesh->num_indices) 
-				mesh->indices[mesh->num_indices] = mesh->num_indices;	
-		}
-	}
-	
-	fclose(fptr);
-	
-	assert(mesh->num_vertices == obj_data[3]);
-	assert(mesh->num_indices == obj_data[4]);
-	
-	// free temp arrays
-	free(positions);
-	free(normals);
-	free(uvs);
+	mesh->num_indices = num_indices;
+	mesh->indices = (GLuint *)malloc(sizeof(GLuint) * mesh->num_indices);
+
+	mesh->num_textures = num_textures;
+	mesh->num_textures = (Texture *)malloc(sizeof(Texture) * mesh->num_textures);
 	
 	return mesh;
 }
@@ -155,25 +54,25 @@ void Mesh_Setup(Mesh *mesh, Shader *shader)
 	glGenBuffers(1, &mesh->ebo);
 	
 	glBindVertexArray(mesh->vao);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-	glBufferData(GL_ARRAY_BUFFER, mesh->num_vertices * sizeof(Vertex), &mesh->vertices[0], GL_STATIC_DRAW);
-	
-	GLuint pos_attrib = glGetAttribLocation(shader->program, "i_position");
-	glEnableVertexAttribArray(pos_attrib);
-	glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, v_position));
-	
-	GLuint norm_attrib = glGetAttribLocation(shader->program, "i_normal"); 
-	glEnableVertexAttribArray(norm_attrib);
-	glVertexAttribPointer(norm_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, v_normal));
-	
-	GLuint tex_attrib = glGetAttribLocation(shader->program, "i_texcoords");
-	glEnableVertexAttribArray(tex_attrib);
-	glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, v_texcoords));
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->num_indices * sizeof(GLuint), &mesh->indices[0], GL_STATIC_DRAW);
-	
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+		glBufferData(GL_ARRAY_BUFFER, mesh->num_vertices * sizeof(Vertex), &mesh->vertices[0], GL_STATIC_DRAW);
+
+		GLuint pos_attrib = glGetAttribLocation(shader->program, "i_position");
+		glEnableVertexAttribArray(pos_attrib);
+		glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, v_position));
+
+		GLuint norm_attrib = glGetAttribLocation(shader->program, "i_normal");
+		glEnableVertexAttribArray(norm_attrib);
+		glVertexAttribPointer(norm_attrib, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, v_normal));
+
+		GLuint tex_attrib = glGetAttribLocation(shader->program, "i_texcoords");
+		glEnableVertexAttribArray(tex_attrib);
+		glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, v_texcoords));
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->num_indices * sizeof(GLuint), &mesh->indices[0], GL_STATIC_DRAW);
+	}
 	glBindVertexArray(0);
 }
 

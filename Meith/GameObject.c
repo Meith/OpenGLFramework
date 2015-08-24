@@ -30,7 +30,7 @@ void GameObject_RenderUpdate(GameObject *game_object)
 
 void GameObject_Render(GameObject *game_object, Shader *shader)
 {
-	//Mesh_Setup(game_object->mesh, shader);
+	//Mesh_Resend(game_object->mesh, shader);
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "u_model"), 1, GL_TRUE, &game_object->transform->world_matrix[0][0]);
 	Mesh_Render(game_object->mesh, shader);
 }
