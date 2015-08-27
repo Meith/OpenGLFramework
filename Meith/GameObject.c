@@ -7,8 +7,8 @@ GameObject *GameObject_Init(int object_type, char *text_path, Shader *shader)
 {
 	GameObject *game_object = (GameObject *)malloc(sizeof(GameObject));
 
-	game_object->mesh = Mesh_Init(object_name[object_type], object_data[object_type]);
-	Mesh_LoadTexture(game_object->mesh, text_path, "texture_diffuse");
+	//game_object->mesh = Mesh_Init(object_name[object_type], object_data[object_type]);
+	//Mesh_LoadTexture(game_object->mesh, text_path, "texture_diffuse");
 	Mesh_Setup(game_object->mesh, shader);
 
 	game_object->transform = Transform_Init();

@@ -19,7 +19,7 @@ Mesh *Mesh_Init(int num_vertices, int num_indices, int num_textures)
 	mesh->indices = (GLuint *)malloc(sizeof(GLuint) * mesh->num_indices);
 
 	mesh->num_textures = num_textures;
-	mesh->num_textures = (Texture *)malloc(sizeof(Texture) * mesh->num_textures);
+	mesh->textures = (Texture *)malloc(sizeof(Texture) * mesh->num_textures);
 	
 	return mesh;
 }

@@ -13,6 +13,20 @@ typedef float vec4[4];
 typedef vec4 mat4x4[4];
 typedef float quat[4];
 
+static _inline void vec2_Zero(vec2 v)
+{
+	int i;
+	for (i = 0; i < 2; ++i)
+		v[i] = 0.0f;
+}
+
+static _inline void vec2_Copy(vec2 destination, vec2 source)
+{
+	int i;
+	for (i = 0; i < 2; ++i)
+		destination[i] = source[i];
+}
+
 static _inline void vec3_Zero(vec3 v)
 {
 	int i;

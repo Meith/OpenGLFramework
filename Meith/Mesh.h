@@ -6,6 +6,8 @@
 #include "Vector.h"
 #include "Shader.h"
 
+#include <assimp/postprocess.h>
+
 typedef struct Vertex
 {
 	vec3 v_position;
@@ -17,7 +19,7 @@ typedef struct Texture
 {
 	GLuint id;
 	char *type;
-	struct aiString *path;
+	struct aiString path;
 } Texture;
 
 typedef struct Mesh
