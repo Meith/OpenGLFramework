@@ -17,29 +17,7 @@ Game *Game_Init(const char *title, const int width, const int height, int flags)
 	game->camera = Camera_Init();
 	game->directional_light = DirectionalLight_Init();
 
-	game->moving_object[0] = GameObject_Init(SPHERE, "textures/blue.png", game->shader);
-	vec3 up = { 0.0f, 1.0f, 0.0f };
-	Transform_MoveDirection(game->moving_object[0]->transform, up, 0.5f);
-
-	int i;
-	for (i = 1; i < 5; ++i)
-		game->moving_object[i] = GameObject_Init(CUBE, "textures/yellow.png", game->shader);
-	vec3 forward = { 0.0f, 0.0f, -1.0f };
-	vec3 back = { 0.0f, 0.0f, 1.0f };
-	vec3 left = { -1.0f, 0.0f, 0.0f };
-	vec3 right = { 1.0f, 0.0f, 0.0f };
-	float disp = 5.0f;
-	Transform_MoveDirection(game->moving_object[1]->transform, forward, disp);
-	Transform_MoveDirection(game->moving_object[2]->transform, back, disp);
-	Transform_MoveDirection(game->moving_object[3]->transform, left, disp);
-	Transform_MoveDirection(game->moving_object[4]->transform, right, disp);
-
-	Transform_MoveDirection(game->moving_object[0]->transform, left, disp);
-
-	game->still_object = GameObject_Init(CUBE, "textures/grey.png", game->shader);
-	vec3 scale = { 20.0f, 0.01f, 20.0f };
-	Transform_Scale(game->still_object->transform, scale);
-	GameObject_RenderUpdate(game->still_object);
+	game->model = Model_Init("objects/nanosuit/nanosuit.obj");
 
 	return game;
 }
@@ -55,42 +33,28 @@ void Game_FixedUpdate(Game *game, float t, const float dt)
 {
 	if (game->input_handler->keystates[SDL_SCANCODE_UP])
 	{
-		game->moving_object[0]->rigid_body->current.direction[2] = -1.0f;
-		game->moving_object[0]->rigid_body->current.speed = 1.0f;
+		
 	}
 
 	if (game->input_handler->keystates[SDL_SCANCODE_DOWN])
 	{
-		game->moving_object[0]->rigid_body->current.direction[2] = 1.0f;
-		game->moving_object[0]->rigid_body->current.speed = 1.0f;
+		
 	}
 
 	if (game->input_handler->keystates[SDL_SCANCODE_LEFT])
 	{
-		game->moving_object[0]->rigid_body->current.direction[0] = -1.0f;
-		game->moving_object[0]->rigid_body->current.speed = 1.0f;
+		
 	}
 
 	if (game->input_handler->keystates[SDL_SCANCODE_RIGHT])
 	{
-		game->moving_object[0]->rigid_body->current.direction[0] = 1.0f;
-		game->moving_object[0]->rigid_body->current.speed = 1.0f;
+		
 	}
-
-	GameObject_FixedUpdate(game->moving_object[0], t, dt);
-	vec3_Zero(game->moving_object[0]->rigid_body->current.direction);
 }
 
 void Game_RenderUpdate(Game *game, const float dt)
 {
-	int i;
-	vec3 axis = { 1.0f, 1.0f, -1.0f };
-	float angle = 20.0f;
-	for (i = 1; i < 5; ++i)
-		Transform_RotateAxis(game->moving_object[i]->transform, axis, angle * dt);
-
-	for (i = 0; i < 5; ++i)
-		GameObject_RenderUpdate(game->moving_object[i]);
+	
 }
 
 void Game_Render(Game *game)
@@ -104,11 +68,7 @@ void Game_Render(Game *game)
 		Camera_Render(game->camera, game->shader);
 		DirectionalLight_Render(game->directional_light, game->shader);
 
-		// render: List of gameobjects, cameras, lights
-		GameObject_Render(game->still_object, game->shader);
-		int i;
-		for (i = 0; i < 5; ++i)
-			GameObject_Render(game->moving_object[i], game->shader);
+		Model_Render(game->model, game->shader);
 	}
 	Shader_UnUseProg();
 
@@ -117,10 +77,6 @@ void Game_Render(Game *game)
 
 void Game_Destroy(Game *game)
 {
-	int i;
-	for (i = 0; i < 5; ++i)
-		GameObject_Destroy(game->moving_object[i]);
-	GameObject_Destroy(game->still_object);
 	DirectionalLight_Destroy(game->directional_light);
 	Camera_Destroy(game->camera);
 	Shader_DestroyProg(game->shader);

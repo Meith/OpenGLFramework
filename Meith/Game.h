@@ -6,7 +6,7 @@
 #include "WindowContext.h"
 #include "InputHandler.h"
 #include "Shader.h"
-#include "Mesh.h"
+#include "Model.h"
 #include "Transform.h"
 #include "Camera.h"
 #include "RigidBody.h"
@@ -35,8 +35,7 @@ typedef struct Game
 	Camera *camera;
 	RigidBody *rigid_body;
 	DirectionalLight *directional_light;
-	GameObject *moving_object[5];
-	GameObject *still_object;
+	Model *model;
 	// To add later: List of gameobjects, cameras, shaders and lights
 } Game;
 

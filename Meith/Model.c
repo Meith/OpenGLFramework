@@ -195,3 +195,10 @@ GLint Model_TextureFromFile(const char *path)
 	SOIL_free_image_data(image);
 	return textureID;
 }
+
+void Model_Render(Model *model, Shader *shader)
+{
+	int i;
+	for (i = 0; i < model->num_meshes; ++i)
+		Mesh_Render(&model->meshes[i], shader);
+}

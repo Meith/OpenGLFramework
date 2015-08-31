@@ -25,5 +25,6 @@ int Model_GetTotalTextures(struct aiMaterial *material);
 Mesh Model_ProcessMesh(Model *model, struct aiMesh *mesh, const struct aiScene *scene);
 void Model_LoadMaterialTextures(Model *model, Mesh *mesh, int current_texture_count, struct aiMaterial *material, enum aiTextureType type, char *type_name);
 GLint Model_TextureFromFile(const char *path);
+void Model_Render(Model *model, Shader *shader);
 
 #endif
