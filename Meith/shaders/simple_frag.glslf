@@ -31,5 +31,6 @@ void main()
 	float diff = max(dot(norm, light_dir), 0.0);
 	vec3 diffuse = directional_light.diffuse * diff * vec3(texture(material.texture_diffuse1, temp_texcoords));
 
-	out_colour = vec4(ambient + diffuse, 1.0f);
+	//out_colour = vec4(ambient + diffuse, 1.0f);
+	out_colour = vec4(texture(material.texture_diffuse1, temp_texcoords));
 }

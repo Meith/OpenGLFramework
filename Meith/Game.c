@@ -17,7 +17,7 @@ Game *Game_Init(const char *title, const int width, const int height, int flags)
 	game->camera = Camera_Init();
 	game->directional_light = DirectionalLight_Init();
 
-	game->model = Model_Init("objects/nanosuit/nanosuit.obj");
+	game->model = Model_Init("objects/nanosuit/nanosuit.obj", game->shader);
 
 	return game;
 }
@@ -60,7 +60,7 @@ void Game_RenderUpdate(Game *game, const float dt)
 void Game_Render(Game *game)
 {
 	// Clear screen to black
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Shader_UseProg(game->shader);

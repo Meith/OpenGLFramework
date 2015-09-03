@@ -17,9 +17,17 @@ int Model_GetTotalMeshes(struct aiNode *node)
 	return num_meshes + node->mNumMeshes;
 }
 
-Model *Model_Init(const char *path)
+Model *Model_Init(const char *path, Shader *shader)
 {
 	Model *model = (Model *)malloc(sizeof(Model));
+
+	model->meshes = NULL;
+	model->textures_loaded = NULL;
+	model->directory = (char *)malloc(sizeof(char) * strlen(path));
+	int i;
+	for (i = 0; (path + i) != strrchr(path, '/') + 1; ++i)
+		model->directory[i] = path[i];
+	model->directory[i] = 0;
 
 	const struct aiScene *scene = aiImportFile(path, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_Triangulate | aiProcess_FlipUVs);
 	
@@ -28,22 +36,24 @@ Model *Model_Init(const char *path)
 
 	model->num_textures_loaded = 0;
 	
-	Model_ProcessNode(model, scene->mRootNode, scene, 0);
+	Model_ProcessNode(model, shader, scene->mRootNode, scene, 0);
 
 	return model;
 }
 
-void Model_ProcessNode(Model *model, struct aiNode *node, const struct aiScene *scene, int num_node)
+void Model_ProcessNode(Model *model, Shader *shader, struct aiNode *node, const struct aiScene *scene, int num_node)
 {
 	unsigned int i;
 	for (i = 0; i < node->mNumMeshes; ++i)
 	{
 		struct aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-		model->meshes[num_node++] = Model_ProcessMesh(model, mesh, scene);
+		model->meshes[num_node] = Model_ProcessMesh(model, mesh, scene);
+		Mesh_Setup(&model->meshes[num_node], shader);
+		++num_node;
 	}
 
 	for (i = 0; i < node->mNumChildren; ++i)
-		Model_ProcessNode(model, node->mChildren[i], scene, num_node);
+		Model_ProcessNode(model, shader, node->mChildren[i], scene, num_node);
 }
 
 int Model_GetTotalIndices(struct aiMesh *mesh)
@@ -134,15 +144,15 @@ Mesh Model_ProcessMesh(Model *model, struct aiMesh *mesh, const struct aiScene *
 
 		// 1. Diffuse maps
 		int current_texture_count = 0;
-		Model_LoadMaterialTextures(model, temp_mesh, current_texture_count, material, aiTextureType_DIFFUSE, "texture_diffuse");
+		Model_LoadMaterialTextures(model, temp_mesh, &current_texture_count, material, aiTextureType_DIFFUSE, "texture_diffuse");
 		// 2. Specular maps
-		Model_LoadMaterialTextures(model, temp_mesh, current_texture_count, material, aiTextureType_SPECULAR, "texture_specular");
+		Model_LoadMaterialTextures(model, temp_mesh, &current_texture_count, material, aiTextureType_SPECULAR, "texture_specular");
 	}
 
 	return *temp_mesh;
 }
 
-void Model_LoadMaterialTextures(Model *model, Mesh *mesh, int current_texture_count, struct aiMaterial *material, enum aiTextureType type, char *type_name)
+void Model_LoadMaterialTextures(Model *model, Mesh *mesh, int *current_texture_count, struct aiMaterial *material, enum aiTextureType type, char *type_name)
 {
 	unsigned int i;
 	int j;
@@ -156,7 +166,7 @@ void Model_LoadMaterialTextures(Model *model, Mesh *mesh, int current_texture_co
 		{
 			if (strcmp(model->textures_loaded[j].path.data, string.data))
 			{
-				mesh->textures[current_texture_count++] = model->textures_loaded[j];
+				mesh->textures[(*current_texture_count)++] = model->textures_loaded[j];
 				skip = 1;
 				break;
 			}
@@ -165,10 +175,10 @@ void Model_LoadMaterialTextures(Model *model, Mesh *mesh, int current_texture_co
 		if (!skip)
 		{
 			Texture texture;
-			texture.id = Model_TextureFromFile(string.data);
+			texture.id = Model_TextureFromFile(strcat(model->directory, string.data));
 			texture.type = type_name;
 			texture.path = string;
-			mesh->textures[current_texture_count++] = texture;
+			mesh->textures[(*current_texture_count)++] = texture;
 			model->textures_loaded = realloc(model->textures_loaded, sizeof(Texture) * (model->num_textures_loaded + 1));
 			model->textures_loaded[model->num_textures_loaded++] = texture;
 		}
